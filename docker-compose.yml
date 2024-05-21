@@ -1,0 +1,49 @@
+version: "3"
+services:
+  db:
+    image: postgres
+    restart: always
+    volumes:
+      - "postgres:/var/lib/postgresql/data"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  web:
+    build: .
+    volumes:
+      - .:/app
+    command: sh -c "rm -f /app/tmp/pids/server.pid && rails server -b 0.0.0.0 -p 3005"
+    ports:
+      - "3005:3005"
+    stdin_open: true
+    tty: true
+    depends_on:
+      - db
+      - redis
+    environment:
+      - REDIS_URL_SIDEKIQ=${REDIS_URL_SIDEKIQ}
+
+  redis:
+    image: redis
+    command: redis-server
+    ports:
+      - "6379:6379"
+    volumes:
+      - "redis:/data"
+
+  sidekiq:
+    depends_on:
+      - db
+      - redis
+    build: .
+    command: bundle exec sidekiq
+    stdin_open: true
+    tty: true
+    volumes:
+      - ".:/web"
+    environment:
+      - REDIS_URL_SIDEKIQ=${REDIS_URL_SIDEKIQ}
+
+volumes:
+  redis:
+  postgres:

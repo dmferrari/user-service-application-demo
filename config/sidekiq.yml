@@ -1,0 +1,7 @@
+:scheduler:
+  :schedule:
+    fix_missing_account_keys_worker:
+      # cron: "0 * * * *"   # Runs at the start of every hour
+      cron: "*/1 * * * *" # Runs every minute for dev/debuggin purposes
+      class: FixMissingAccountKeysWorker
+      queue: default
